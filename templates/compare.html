@@ -17,7 +17,7 @@
     <!-- JQuery Datatables.net CSS -->
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.15/css/jquery.dataTables.css">
 
-    <title>Compare jobs</title>
+    <title>Compare jobs times</title>
 
 <script type=text/javascript>
     $(function() {
@@ -35,11 +35,14 @@
   </script>
 </head>
 <body>
-  <h1>Compare jobs</h1>
+  <h1>Compare jobs times</h1>
 
-  <p>Good job<br><br><input type=text size=20 name="good"></p>
-  <p>Bad job<br><br><input type=text size=20 name="bad"></p>
-  <p><a href=# id=compare>Compare jobs</a></p>
+  <h3>Good job</h3><input type=text size=70 name="good">
+  <p>Link to logs (i.e. http://logs.openstack.org/26/606126/1/check/tripleo-ci-centos-7-scenario002-multinode-oooq-container/0bc55a2/)</p>
+  <h3>Bad job</h3><input type=text size=70 name="bad">
+  <p>Link to logs (i.e. http://logs.openstack.org/43/607343/3/check/tripleo-ci-centos-7-scenario002-multinode-oooq-container/1fd8194/)</p>
+  <br><br>
+  <h3><b><a href=# id=compare>Compare jobs</a></b></h3>
   <span id=result></span>
 <script>
     $(function () {
