@@ -15,7 +15,7 @@ custom_style = Style(
   opacity='.6',
   opacity_hover='.9',
   transition='400ms ease-in',
-  colors=('#E853A0', '#00FF80')
+  colors=('#00FF80', '#E853A0')
   )
 
 NOGRAPH = """
@@ -39,8 +39,8 @@ def graph(x, name):
     bar_chart = pygal.Bar(style=custom_style)
     bar_chart.title = 'Chart of deltas for %s' % name.capitalize()
     bar_chart.x_labels = [i[0] for i in x]
-    bar_chart.add('Bad', [i[1] for i in x])
-    bar_chart.add('Good', [i[2] for i in x])
+    bar_chart.add('Good', [i[1] for i in x])
+    bar_chart.add('Bad', [i[2] for i in x])
     result = bar_chart.render_data_uri()
     return GRAPH % result
 

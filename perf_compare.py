@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 import argparse
-import os
-import requests
+import datetime
 import json
 import logging
 import logging.handlers
-import datetime
-
+import os
+import requests
 from six.moves.urllib.parse import urljoin
 
 
