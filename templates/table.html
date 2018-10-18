@@ -2,7 +2,8 @@
 <h3>Table for {{ i }}</h3>
 <table id=job_data class='table table-hover display' cellspacing=0 width=50%>
 <tr><th>Task name</th><th>Bad job</th><th>Good job</th><th>Delta</th><th>Percentage</th></tr>
-    {% for line in data[i] %}
+{%if data[i] %}
+{% for line in data[i] %}
     <tr>
         <td>{{ line[0] }}</td>
         <td>{{ line[1] }}</td>
@@ -17,6 +18,7 @@
         </td>
     </tr>
 {% endfor %}
+{% endif %}
 
 </table>
 {% endfor %}
