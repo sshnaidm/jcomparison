@@ -5,7 +5,10 @@ import json
 import logging
 import logging.handlers
 import os
+import re
+import subprocess
 import requests
+
 from six.moves.urllib.parse import urljoin
 
 
@@ -14,6 +17,12 @@ DATA = {
     'oooq': 'ara.json',
     'undercloud': 'ara.oooq.root.json',
     'overcloud': 'ara.oooq.oc.json'
+}
+
+SQLITE_FILES = {
+    'oooq': 'non-exist',
+    'undercloud': 'ara_oooq_root/ara-report/ansible.sqlite',
+    'overcloud': 'ara_oooq_overcloud/ara-report/ansible.sqlite'
 }
 
 log = logging.getLogger('comparator')
@@ -25,15 +34,22 @@ log_formatter = logging.Formatter('%(asctime)s %(process)d '
 log_handler.setFormatter(log_formatter)
 log.addHandler(log_handler)
 
+TASK_NAME = re.compile('^[^:]+ : ')
+
+
+def name_simplify(name):
+    return TASK_NAME.sub('', name)
+
 
 def normalize(data):
 
     def time_delta(ts):
         t = datetime.datetime.strptime(ts, "%H:%M:%S")
         return int(datetime.timedelta(hours=t.hour, minutes=t.minute,
-                                  seconds=t.second).total_seconds())
+                                      seconds=t.second).total_seconds())
 
-    norm = [{'name': i['Name'], 'time': time_delta(i['Duration'])}
+    norm = [{'name': name_simplify(i['Name']),
+             'time': time_delta(i['Duration'])}
             for i in data]
     dictized = {}
     for i in norm:
@@ -46,7 +62,7 @@ def normalize(data):
         if i['name'] in dictized:
             total_norm.append(
                 {'name': i['name'], 'time': dictized.pop(i['name'])}
-                )
+            )
     norm_names = [i['name'] for i in total_norm]
     import time
     with open("/tmp/devb_%s" % time.time(), "w") as f:
@@ -77,7 +93,7 @@ def filter_data(data):
     return list(f2)
 
 
-def get_file(link, filepath):
+def get_file(link, filepath, json_file=True):
     url = urljoin(link, "logs/" + filepath)
     www = requests.get(url)
     if not www or www.status_code not in (200, 404):
@@ -87,27 +103,31 @@ def get_file(link, filepath):
     elif www.status_code == 404:
         log.debug("Web request for %s got 404", url)
         return "not found"
-    try:
-        jsoned = www.json()
-        return jsoned
-    except Exception:
-        log.error("Couldn't parse JSON from %s", url)
-        return None
+    if json_file:
+        try:
+            jsoned = www.json()
+            return jsoned
+        except Exception:
+            log.error("Couldn't parse JSON from %s", url)
+            return None
+    return www.content
 
 
 def extract_dummy(link1, link2, filepath):
     with open("/home/sshnaidm/tmp/percomp/good/" + filepath) as f:
         try:
             good = json.load(f)
-        except:
+        except Exception:
             return None
-        if not good: return None
+        if not good:
+            return None
     with open("/home/sshnaidm/tmp/percomp/bad/" + filepath) as f:
         try:
             bad = json.load(f)
-        except:
+        except Exception:
             return None
-        if not bad: return None
+        if not bad:
+            return None
     return good, bad
 
 
@@ -123,13 +143,44 @@ def extract(link1, link2, filepath):
     return None
 
 
+def json_from_sql(sql):
+    temp_file = "/tmp/ara_tmp.sqlite"
+    with open(temp_file, "wb") as f:
+        f.write(sql)
+    cmd = "ARA_DATABASE='sqlite:///%s' ara task list --all -f json"
+    result = subprocess.check_output(
+        cmd % temp_file, stderr=subprocess.STDOUT, shell=True)
+    try:
+        json_data = json.loads(result)
+    except Exception:
+        log.error("Couldn't parse JSON from saved sqlite")
+        return None
+    return json_data
+
+
+def sqlite_extract(link1, link2, filepath):
+    data1 = get_file(link1, filepath, json_file=False)
+    if data1 == "not found":
+        return None
+    data2 = get_file(link2, filepath, json_file=False)
+    if data1 == "not found":
+        return None
+    if data1 and data2:
+        data_1, data_2 = json_from_sql(data1), json_from_sql(data2)
+        if data_1 and data_2:
+            return data_1, data_2
+    return None
+
+
 def compare(good, bad):
     ready = {}
     for part, filepath in DATA.items():
         extracted_data = extract(good, bad, filepath)
         if extracted_data is None:
-            ready[part] = None
-            continue
+            extracted_data = sqlite_extract(good, bad, SQLITE_FILES[part])
+            if extracted_data is None:
+                ready[part] = None
+                continue
         combined_data = combine(*extracted_data)
         filtered_data = filter_data(combined_data)
         ready[part] = filtered_data
@@ -140,10 +191,15 @@ def main():
     parser = argparse.ArgumentParser(__doc__)
 
     parser.add_argument('-g', '--good-job', dest="good",
-                        default="https://logs.rdoproject.org/96/15896/35/check/legacy-tripleo-ci-centos-7-ovb-3ctlr_1comp-featureset001-master/3cf4a97/",
+                        default=("https://logs.rdoproject.org/96/15896/35/"
+                                 "check/legacy-tripleo-ci-centos-7-ovb-3ctlr_"
+                                 "1comp-featureset001-master/3cf4a97/"),
                         help='Link to good job')
     parser.add_argument('-b', '--bad-job', dest="bad",
-                        default = "https://logs.rdoproject.org/96/15896/35/check/legacy-tripleo-ci-centos-7-ovb-3ctlr_1comp-featureset001-master-vexxhost/2b2cbf3/",
+                        default=("https://logs.rdoproject.org/96/15896/35/"
+                                 "check/legacy-tripleo-ci-centos-7-ovb-3ctlr_"
+                                 "1comp-featureset001-master-vexxhost/"
+                                 "2b2cbf3/"),
                         help='Link to bad job')
     args = parser.parse_args()
     data = compare(args.good, args.bad)
