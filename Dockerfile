@@ -7,11 +7,7 @@ RUN apk update && \
     rm -rf /root/.cache
 COPY ./requirements.txt /app/requirements.txt
 WORKDIR /app
-RUN pip install -r requirements.txt && \
-    apk del --no-cache --purge .build-deps linux-headers \
-    rm -rf /tmp/* && \
-    rm -rf /var/cache/apk/* \
-    rm -rf /root/.cache
+RUN pip install -r requirements.txt
 COPY . /app
 ENTRYPOINT [ "python" ]
 CMD [ "flask_comp.py" ]
