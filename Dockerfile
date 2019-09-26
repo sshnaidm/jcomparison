@@ -1,5 +1,5 @@
 FROM python:3.6-alpine
-MAINTAINER Sagi Shnaidman "einarum@gmail.com"
+MAINTAINER Sagi Shnaidman "@sshnaidm"
 RUN apk update && \
     apk add --no-cache --virtual .build-deps python3-dev build-base libffi-dev openssl-dev linux-headers && \
     rm -rf /tmp/* && \
@@ -10,4 +10,4 @@ WORKDIR /app
 RUN pip install -r requirements.txt
 COPY . /app
 ENTRYPOINT [ "python" ]
-CMD [ "flask_comp.py" ]
+CMD [ "api.py" ]
