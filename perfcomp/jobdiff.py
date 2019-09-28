@@ -21,9 +21,10 @@ class JobDiff:
         inline, uniq1, uniq2 = rpm_diff.rpms(self.good, self.bad)
         # sometimes we need to inmprove the diff
         inline, uniq1, uniq2 = rpm_diff.check_packages(inline, uniq1, uniq2)
-        inline = [rpm_diff.colorize_diff(i) for i in inline]
+        colored_inline = [rpm_diff.colorize_diff(i) for i in inline]
+        inline_with_links = rpm_diff.add_github_links(inline, colored_inline)
         return {
-            'inline': inline, "uniq1": uniq1, "uniq2": uniq2,
+            'inline': inline_with_links, "uniq1": uniq1, "uniq2": uniq2,
             'rpms_diff_max_length': max([len(l) for l in (uniq1, uniq2)])
         }
 

@@ -13,7 +13,11 @@
 <tr><th colspan="2">Different RPMs and their changes</th></tr>
 {% for j in inline %}
 <tr>
-    <td colspan="2">{{ j[0] }}<br/>{{ j[1] }}</td>
+    <td colspan="2">
+        {{ j[0] }}<br/>
+        {{ j[1] }}<br/>
+        {% if j[2] %}<a href="{{ j[2] }}">Compare diff on Github</a>{% endif %}
+    </td>
 </tr>
 {% endfor %}
 {% endif %}
