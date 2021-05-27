@@ -38,8 +38,8 @@ class JobDiff:
 
     def generate(self):
         data_results = {}
-        if self.ansible_diff:
-            data_results.update(self.ansible_playbooks_diff())
+        # if self.ansible_diff:
+        #     data_results.update(self.ansible_playbooks_diff())
         if self.rpm_diff_b:
             data_results.update(self.rpm_files_diff())
         if self.pip_diff_b:

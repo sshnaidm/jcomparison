@@ -12,8 +12,8 @@ SQLITE_FILES = {
     'undercloud': 'ara_oooq_root/ara-report/ansible.sqlite',
     'overcloud': 'ara_oooq_overcloud/ara-report/ansible.sqlite'
 }
-RPM_LOC = 'undercloud/var/log/extra/rpm-list.txt.gz'
-PIP_LOC = 'undercloud/var/log/extra/pip.txt.gz'
+RPM_LOC = 'undercloud/var/log/extra/rpm-list.txt'
+PIP_LOC = 'undercloud/var/log/extra/pip.txt'
 NAME_TO_PROJECT = {
     # Openstack packages
     'openstack-tripleo-common': 'openstack/tripleo-common',
