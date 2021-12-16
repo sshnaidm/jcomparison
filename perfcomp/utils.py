@@ -72,17 +72,22 @@ def get_file(link, filepath, json_file=True):
                 return check_json(cf.read(), url)
             return cf.read()
     www = requests.get(url)
-    if www and www.status_code == 404:
+    if www is not None and www.status_code == 404:
         log.debug("Web request for %s got 404", url)
-        return "not found"
+        url = url + ".gz"
+        www = requests.get(url)
+        if www and www.status_code == 404:
+            log.debug("Web request for %s got 404", url)
+            return None
     if not www or www.status_code not in (200, 404):
         log.debug("Web request for %s failed with status code %s",
                   url, str(www.status_code))
         return None
-    save_cache(logs_id, filepath, www.content)
+    content = www.content
+    save_cache(logs_id, filepath, content)
     if json_file:
-        return check_json(www.content, url)
-    return www.content
+        return check_json(content, url)
+    return content
 
 
 def json_from_sql(sql):
